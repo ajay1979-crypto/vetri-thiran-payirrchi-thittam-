@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recommendation History - PocketSmart AI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart AI</a>
+        <ul class="nav-links">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/home-planner">Home Planner</a></li>
+            <li><a href="/party-planner">Party Planner</a></li>
+            <li><a href="/jewelry-planner">Jewelry Planner</a></li>
+            <li><a href="/history" class="active">History</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Your Recommendation History</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Review and explore all your past budget plans.</p>
+        
+        {% if history %}
+            <div class="grid-3">
+                {% for item in history %}
+                <div class="card" style="margin-bottom:0;">
+                    <span class="badge">{{ item.recommendation_type | capitalize }} Plan</span>
+                    <p><small style="color: var(--text-muted);">{{ item.timestamp }}</small></p>
+                    <p style="margin: 1rem 0;"><strong>Budget:</strong> ₹{{ item.result_summary.total_budget }}</p>
+                    <button class="btn btn-secondary" style="width: 100%; font-size: 0.9rem;" onclick="alert('Full details saved successfully in session records.')">View Details</button>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align: center;">
+                <p style="color: var(--text-muted);">No past recommendations found. Try generating a budget plan!</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

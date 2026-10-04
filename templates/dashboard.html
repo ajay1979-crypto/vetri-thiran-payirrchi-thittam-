@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - PocketSmart AI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart AI</a>
+        <ul class="nav-links">
+            <li><a href="/dashboard" class="active">Dashboard</a></li>
+            <li><a href="/home-planner">Home Planner</a></li>
+            <li><a href="/party-planner">Party Planner</a></li>
+            <li><a href="/jewelry-planner">Jewelry Planner</a></li>
+            <li><a href="/history">History</a></li>
+            <li><form action="/logout" method="POST" style="display:inline;"><button type="submit" style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-weight:500;">Logout</button></form></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Welcome, {{ user.full_name or user.username }}!</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Select a smart budget planner below to start your personalized financial planning experience.</p>
+        
+        <div class="grid-3">
+            <div class="planner-card">
+                <h3>Home Interior Planner</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 1rem 0;">Allocate budgets for furniture, lighting, and decor across Indian marketplaces.</p>
+                <a href="/home-planner" class="btn">Get Started</a>
+            </div>
+            <div class="planner-card">
+                <h3>Party Budget Planner</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 1rem 0;">Organize events with AI-backed breakdowns for venues, food, and decor.</p>
+                <a href="/party-planner" class="btn">Get Started</a>
+            </div>
+            <div class="planner-card">
+                <h3>Jewelry Planner</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 1rem 0;">Match occasion jewelry with outfit photos and stay strictly within budget.</p>
+                <a href="/jewelry-planner" class="btn">Get Started</a>
+            </div>
+        </div>
+
+        {% if recent %}
+        <div class="card" style="margin-top: 3rem;">
+            <h3>Recent Activity</h3>
+            <ul style="list-style: none; margin-top: 1rem;">
+                {% for item in recent %}
+                <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>{{ item.recommendation_type | capitalize }} Plan</strong><br>
+                        <small style="color: var(--text-muted);">Budget: ₹{{ item.result_summary.total_budget }} | {{ item.timestamp }}</small>
+                    </div>
+                    <a href="/history" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.85rem;">View</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    <footer>&copy; 2026 PocketSmart AI. All rights reserved.</footer>
+</body>
+</html>

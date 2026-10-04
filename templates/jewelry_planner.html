@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jewelry Budget Planner - PocketSmart AI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart AI</a>
+        <ul class="nav-links">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/home-planner">Home Planner</a></li>
+            <li><a href="/party-planner">Party Planner</a></li>
+            <li><a href="/jewelry-planner" class="active">Jewelry Planner</a></li>
+            <li><a href="/history">History</a></li>
+        </ul>
+    </nav>
+    <div class="container" style="max-width: 800px;">
+        <div class="card">
+            <h2>Jewelry Budget Planner</h2>
+            <form id="jewelryForm" enctype="multipart/form-data">
+                <label>Total Budget (INR)</label>
+                <input type="number" name="total_budget" value="10000" required>
+                
+                <label>Occasion</label>
+                <input type="text" name="occasion" value="Wedding Reception" required>
+
+                <label>Style Preferences</label>
+                <textarea name="preferences" rows="3" placeholder="e.g. Minimalist gold or silver-plated sets"></textarea>
+
+                <label>Upload Outfit Image (Optional)</label>
+                <input type="file" name="image" accept="image/*">
+                
+                <button type="submit" class="btn" style="width: 100%;">Get Jewelry Recommendations</button>
+            </form>
+        </div>
+
+        <div id="results" class="card" style="display: none;">
+            <h3>Your Personalized Jewelry Recommendations</h3>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('jewelryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+
+    const messages = [
+        "Analyzing your outfit image...",
+        "Matching colors and styling tones...",
+        "Searching collections from Tanishq & Amazon...",
+        "Curating your jewelry selections..."
+    ];
+    let msgIndex = 0;
+    btn.textContent = messages[msgIndex];
+    
+    const interval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        btn.textContent = messages[msgIndex];
+    }, 2000);
+
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('/jewelry-budget', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        clearInterval(interval);
+        btn.textContent = 'Get Jewelry Recommendations';
+        btn.disabled = false;
+
+        if (res.ok) {
+            let html = `<p><strong>Total Budget:</strong> ₹${data.total_budget} | <strong>Remaining:</strong> ₹${data.remaining_budget || 0}</p>`;
+            if (data.jewelry_recommendations) {
+                html += `<h4>Recommended Items</h4>`;
+                data.jewelry_recommendations.forEach(item => {
+                    html += `<div class="result-item"><strong>${item.item_type}</strong> - ₹${item.estimated_price}<br><small>${item.description}</small>`;
+                    if (item.shopping_links) {
+                        html += `<div class="links-group">`;
+                        for (let [platform, link] of Object.entries(item.shopping_links)) {
+                            html += `<a href="${link}" target="_blank">${platform}</a>`;
+                        }
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                });
+            }
+            document.getElementById('resultsContent').innerHTML = html;
+            document.getElementById('results').style.display = 'block';
+        } else {
+            alert('Error generating jewelry recommendations.');
+        }
+    } catch (err) {
+        clearInterval(interval);
+        btn.textContent = 'Get Jewelry Recommendations';
+        btn.disabled = false;
+        alert('Network or server error occurred.');
+    }
+});
+    </script>
+</body>
+</html>

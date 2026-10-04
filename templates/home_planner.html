@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Interior Planner - PocketSmart AI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart AI</a>
+        <ul class="nav-links">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/home-planner" class="active">Home Planner</a></li>
+            <li><a href="/party-planner">Party Planner</a></li>
+            <li><a href="/jewelry-planner">Jewelry Planner</a></li>
+            <li><a href="/history">History</a></li>
+        </ul>
+    </nav>
+    <div class="container" style="max-width: 800px;">
+        <div class="card">
+            <h2>Home Interior Budget Planner</h2>
+            <form id="homeForm">
+                <label>Total Budget (INR)</label>
+                <input type="number" name="total_budget" value="25000" required>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Number of Lights</label>
+                        <input type="number" name="num_lights" value="4">
+                    </div>
+                    <div>
+                        <label>Number of Ceiling Fans</label>
+                        <input type="number" name="num_fans" value="2">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Number of Furniture Pieces</label>
+                        <input type="number" name="num_furniture" value="2">
+                    </div>
+                    <div>
+                        <label>Number of Dining Tables</label>
+                        <input type="number" name="num_dining_tables" value="1">
+                    </div>
+                </div>
+
+                <label>Special Requirements or Preferences</label>
+                <textarea name="additional_requirements" rows="3" placeholder="e.g. Modern minimalist style, warm lighting"></textarea>
+                
+                <button type="submit" class="btn" style="width: 100%;">Generate Recommendations</button>
+            </form>
+        </div>
+
+        <div id="results" class="card" style="display: none;">
+            <h3>Your Personalized Budget Plan</h3>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+       document.getElementById('homeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+
+    // Dynamic loading status messages
+    const messages = [
+        "Analyzing your budget...",
+        "Sourcing items from Amazon & IKEA...",
+        "Balancing category allocations...",
+        "Almost ready..."
+    ];
+    let msgIndex = 0;
+    btn.textContent = messages[msgIndex];
+    
+    const interval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        btn.textContent = messages[msgIndex];
+    }, 2000);
+
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('/home-budget', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        clearInterval(interval);
+        btn.textContent = 'Generate Recommendations';
+        btn.disabled = false;
+
+        if (res.ok) {
+            let html = `<p><strong>Total Budget:</strong> ₹${data.total_budget} | <strong>Remaining:</strong> ₹${data.remaining_budget || 0}</p>`;
+            if (data.budget_breakdown) {
+                data.budget_breakdown.forEach(cat => {
+                    html += `<div class="result-item"><h4>${cat.category.toUpperCase()} (Allocation: ₹${cat.allocation})</h4><ul>`;
+                    cat.items.forEach(item => {
+                        html += `<li><strong>${item.name}</strong> - ₹${item.estimated_price} (Qty: ${item.quantity})<br><small>${item.description}</small>`;
+                        if (item.shopping_links) {
+                            html += `<div class="links-group">`;
+                            for (let [platform, link] of Object.entries(item.shopping_links)) {
+                                html += `<a href="${link}" target="_blank">${platform}</a>`;
+                            }
+                            html += `</div>`;
+                        }
+                        html += `</li>`;
+                    });
+                    html += `</ul></div>`;
+                });
+            }
+            document.getElementById('resultsContent').innerHTML = html;
+            document.getElementById('results').style.display = 'block';
+        } else {
+            alert('Error generating recommendations.');
+        }
+    } catch (err) {
+        clearInterval(interval);
+        btn.textContent = 'Generate Recommendations';
+        btn.disabled = false;
+        alert('Network or server error occurred.');
+    }
+});
+    </script>
+</body>
+</html>

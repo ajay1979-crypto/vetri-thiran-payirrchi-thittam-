@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Party Budget Planner - PocketSmart AI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart AI</a>
+        <ul class="nav-links">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/home-planner">Home Planner</a></li>
+            <li><a href="/party-planner" class="active">Party Planner</a></li>
+            <li><a href="/jewelry-planner">Jewelry Planner</a></li>
+            <li><a href="/history">History</a></li>
+        </ul>
+    </nav>
+    <div class="container" style="max-width: 800px;">
+        <div class="card">
+            <h2>Party Budget Planner</h2>
+            <form id="partyForm">
+                <label>Total Budget (INR)</label>
+                <input type="number" name="total_budget" value="15000" required>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Number of Guests</label>
+                        <input type="number" name="num_guests" value="25">
+                    </div>
+                    <div>
+                        <label>Party Type</label>
+                        <input type="text" name="party_type" value="Birthday Party">
+                    </div>
+                </div>
+
+                <label>Venue Type</label>
+                <input type="text" name="venue_type" value="Banquet Hall / Home">
+
+                <label>Additional Requirements</label>
+                <textarea name="additional_requirements" rows="3" placeholder="e.g. Vegetarian catering, fairy lights decoration"></textarea>
+                
+                <button type="submit" class="btn" style="width: 100%;">Generate Party Plan</button>
+            </form>
+        </div>
+
+        <div id="results" class="card" style="display: none;">
+            <h3>Your Party Budget Plan</h3>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+       document.getElementById('partyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+
+    const messages = [
+        "Analyzing party requirements...",
+        "Allocating budget for venue & catering...",
+        "Sourcing vendors from Swiggy & Zomato...",
+        "Finalizing your event plan..."
+    ];
+    let msgIndex = 0;
+    btn.textContent = messages[msgIndex];
+    
+    const interval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        btn.textContent = messages[msgIndex];
+    }, 2000);
+
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('/party-budget', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        clearInterval(interval);
+        btn.textContent = 'Generate Party Plan';
+        btn.disabled = false;
+
+        if (res.ok) {
+            let html = `<p><strong>Total Budget:</strong> ₹${data.total_budget}</p>`;
+            if (data.budget_breakdown) {
+                data.budget_breakdown.forEach(cat => {
+                    html += `<div class="result-item"><h4>${cat.category.toUpperCase()} (Allocation: ₹${cat.allocation})</h4><ul>`;
+                    cat.items.forEach(item => {
+                        html += `<li><strong>${item.name}</strong> - ₹${item.estimated_price} (Qty: ${item.quantity})<br><small>${item.description}</small>`;
+                        if (item.shopping_links) {
+                            html += `<div class="links-group">`;
+                            for (let [platform, link] of Object.entries(item.shopping_links)) {
+                                html += `<a href="${link}" target="_blank">${platform}</a>`;
+                            }
+                            html += `</div>`;
+                        }
+                        html += `</li>`;
+                    });
+                    html += `</ul></div>`;
+                });
+            }
+            document.getElementById('resultsContent').innerHTML = html;
+            document.getElementById('results').style.display = 'block';
+        } else {
+            alert('Error generating party plan.');
+        }
+    } catch (err) {
+        clearInterval(interval);
+        btn.textContent = 'Generate Party Plan';
+        btn.disabled = false;
+        alert('Network or server error occurred.');
+    }
+});
+    </script>
+</body>
+</html>
